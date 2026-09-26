@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ML model files
+model/*.pkl
+model/*.joblib
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Environment files
+.env
+
+# Python cache
+*.pyc
+__pycache__/
