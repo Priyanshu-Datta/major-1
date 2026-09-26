@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pickle
 import pandas as pd
 import os
+from huggingface_hub import hf_hub_download
 
 app = Flask(__name__)
 CORS(app)
@@ -12,7 +13,14 @@ CORS(app)
 # ---------------------------------------
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "crop_prediction_model.pkl")
+# -----------------------------------------
+# LOAD TRAINED MODEL FROM HUGGING FACE
+# -----------------------------------------
+
+MODEL_PATH = hf_hub_download(
+    repo_id="priyanshudatta80/crop-prediction-model",
+    filename="crop_prediction_model.pkl"
+)
 
 with open(MODEL_PATH, "rb") as file:
     data = pickle.load(file)
