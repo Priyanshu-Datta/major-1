@@ -100,7 +100,7 @@ function SoilPrediction() {
     try {
 
       const response = await fetch(
-  "https://major-1-1.onrender.com/predict",
+        "https://major-1-1.onrender.com/predict",
         {
           method: "POST",
 
