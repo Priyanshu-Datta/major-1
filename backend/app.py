@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(
 )
 
 # ---------------------------------------
-# LOAD TRAINED MODEL
+# MODEL PATH
 # ---------------------------------------
 
 MODEL_PATH = os.path.join(
@@ -28,10 +28,15 @@ MODEL_PATH = os.path.join(
 print("Loading model from:")
 print(MODEL_PATH)
 
+# Check whether model exists
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(
         f"Model file not found: {MODEL_PATH}"
     )
+
+# ---------------------------------------
+# LOAD MODEL
+# ---------------------------------------
 
 with open(MODEL_PATH, "rb") as file:
     model_data = pickle.load(file)
@@ -40,13 +45,12 @@ crop_encoder = model_data["crop_encoder"]
 soil_encoder = model_data["soil_encoder"]
 
 soil_model = model_data["soil_model"]
-humidity_model = model_data["humidity_model"]
-moisture_model = model_data["moisture_model"]
-nitrogen_model = model_data["nitrogen_model"]
-potassium_model = model_data["potassium_model"]
-phosphorus_model = model_data["phosphorus_model"]
+regression_model = model_data["regression_model"]
 
 print("Model loaded successfully!")
+
+print("Available model components:")
+print(model_data.keys())
 
 
 # ---------------------------------------
@@ -72,6 +76,7 @@ def predict():
 
     try:
 
+        # Get JSON data
         data_received = request.get_json()
 
         if not data_received:
@@ -79,24 +84,29 @@ def predict():
                 "error": "No JSON data received."
             }), 400
 
+        # Get crop
         crop_name = data_received.get("crop")
+
+        # Get temperature
         temperature = data_received.get("temperature")
 
-        # Check required values
+        # Check crop
         if crop_name is None:
             return jsonify({
                 "error": "Crop is required."
             }), 400
 
+        # Check temperature
         if temperature is None:
             return jsonify({
                 "error": "Temperature is required."
             }), 400
 
+        # Convert temperature to float
         temperature = float(temperature)
 
         # ---------------------------------------
-        # CHECK CROP
+        # CHECK WHETHER CROP EXISTS
         # ---------------------------------------
 
         if crop_name not in crop_encoder.classes_:
@@ -114,7 +124,7 @@ def predict():
         )[0]
 
         # ---------------------------------------
-        # CREATE INPUT DATAFRAME
+        # CREATE INPUT DATA
         # ---------------------------------------
 
         input_data = pd.DataFrame(
@@ -138,28 +148,25 @@ def predict():
         )[0]
 
         # ---------------------------------------
-        # NUMERICAL PREDICTIONS
+        # NUMERICAL PREDICTION
         # ---------------------------------------
 
-        humidity = humidity_model.predict(
+        numerical_prediction = regression_model.predict(
             input_data
-        )[0]
+        )
 
-        moisture = moisture_model.predict(
-            input_data
-        )[0]
+        # Get first row
+        numerical_values = numerical_prediction[0]
 
-        nitrogen = nitrogen_model.predict(
-            input_data
-        )[0]
+        # ---------------------------------------
+        # EXTRACT VALUES
+        # ---------------------------------------
 
-        potassium = potassium_model.predict(
-            input_data
-        )[0]
-
-        phosphorus = phosphorus_model.predict(
-            input_data
-        )[0]
+        humidity = numerical_values[0]
+        moisture = numerical_values[1]
+        nitrogen = numerical_values[2]
+        potassium = numerical_values[3]
+        phosphorus = numerical_values[4]
 
         # ---------------------------------------
         # CREATE RESULT
