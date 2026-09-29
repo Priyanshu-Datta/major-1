@@ -23,7 +23,7 @@ function SoilPrediction() {
   useEffect(() => {
 
     fetch(
-      "https://major-1-1.onrender.com/"
+      "https://major-1-1.onrender.com/crops"
     )
 
       .then((response) => {
