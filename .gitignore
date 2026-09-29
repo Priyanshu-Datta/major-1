@@ -4,9 +4,7 @@ __pycache__/
 .venv/
 venv/
 
-# ML model files
-model/*.pkl
-model/*.joblib
+
 
 # Node
 frontend/node_modules/
