@@ -23,7 +23,7 @@ function SoilPrediction() {
   useEffect(() => {
 
     fetch(
-      "http://127.0.0.1:5000/crops"
+      "https://major-1-1.onrender.com/"
     )
 
       .then((response) => {
