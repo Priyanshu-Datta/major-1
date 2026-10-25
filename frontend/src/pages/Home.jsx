@@ -230,40 +230,6 @@ function Home() {
           development progresses.
         </p>
 
-
-        <div className="future-grid">
-
-          <div>
-            <span>
-              04
-            </span>
-
-            <h3>
-              Project Module
-            </h3>
-
-            <p>
-              Coming soon
-            </p>
-          </div>
-
-
-          <div>
-            <span>
-              05
-            </span>
-
-            <h3>
-              Project Module
-            </h3>
-
-            <p>
-              Coming soon
-            </p>
-          </div>
-
-        </div>
-
       </section>
 
     </div>
