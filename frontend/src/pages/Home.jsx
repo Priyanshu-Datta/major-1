@@ -48,7 +48,7 @@ function Home() {
               to="/page3"
               className="secondary-button"
             >
-              Explore Project
+              Wheather
             </Link>
 
           </div>
@@ -232,21 +232,6 @@ function Home() {
 
 
         <div className="future-grid">
-
-          <div>
-            <span>
-              03
-            </span>
-
-            <h3>
-              Project Module
-            </h3>
-
-            <p>
-              Coming soon
-            </p>
-          </div>
-
 
           <div>
             <span>
