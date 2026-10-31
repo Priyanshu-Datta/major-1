@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import SoilPrediction from "./pages/SoilPrediction";
 import WeatherDashboard from "./pages/WeatherDashboard";
-import Page4 from "./pages/Page4";
+import DiseaseDetection from "./pages/diseasedetection";
 import Page5 from "./pages/Page5";
 
 function App() {
@@ -36,8 +36,8 @@ function App() {
 
           {/* PAGE 4 */}
           <Route
-            path="/page4"
-            element={<Page4 />}
+            path="/Page4"
+            element={<DiseaseDetection />}
           />
 
           {/* PAGE 5 */}
@@ -46,7 +46,11 @@ function App() {
             element={<Page5 />}
           />
 
-          {/* REDIRECT OLD URL TO WEATHER DASHBOARD */}
+          {/* REDIRECT OLD URL*/}
+          <Route
+            path="/Page4"
+            element={<Navigate to="/page4" replace />}
+          />
           <Route
             path="/page3"
             element={<Navigate to="/weather" replace />}

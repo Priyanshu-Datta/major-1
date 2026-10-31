@@ -7,6 +7,14 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# ============================================================
+# PLANT DISEASE DETECTION API
+# ============================================================
+
+from disease_prediction import disease_bp
+
+app.register_blueprint(disease_bp)
+
 # ---------------------------------------
 # FIND PROJECT ROOT DIRECTORY
 # ---------------------------------------
@@ -213,5 +221,5 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True
+        debug=False
     )

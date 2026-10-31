@@ -40,7 +40,7 @@ function Navbar() {
           to="/page4"
           className={isActive("/page4") ? "active" : ""}
         >
-          Part 4
+          Plant Disease
         </Link>
 
         <Link
