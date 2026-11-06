@@ -22,7 +22,7 @@ function diseasedetection() {
 
   // Flask backend URL
   const API_URL = import.meta.env.VITE_API_BASE_URL
-    || "http://localhost:5000/predict-disease";
+    || "https://major-1-1.onrender.com/predict-disease";
 
 
   // ============================================================
