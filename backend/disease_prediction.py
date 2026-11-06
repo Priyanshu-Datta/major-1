@@ -5,9 +5,6 @@ import numpy as np
 from io import BytesIO
 
 from flask import Blueprint, request, jsonify
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-
 
 # ============================================================
 # 1. CONFIGURATION
@@ -59,10 +56,48 @@ if not os.path.exists(MODEL_PATH):
         f"Model not found: {MODEL_PATH}"
     )
 
-model = load_model(
-    MODEL_PATH,
-    compile=False
-)
+# ============================================================
+# LAZY MODEL LOADING
+# ============================================================
+
+model = None
+
+IMG_HEIGHT = None
+IMG_WIDTH = None
+NUM_CLASSES = None
+
+
+def get_model():
+
+    global model
+    global IMG_HEIGHT
+    global IMG_WIDTH
+    global NUM_CLASSES
+
+    if model is None:
+
+        print("Loading TensorFlow...")
+
+        from tensorflow.keras.models import load_model
+
+        print("Loading Plant Disease Model...")
+
+        model = load_model(
+            MODEL_PATH,
+            compile=False
+        )
+
+        IMG_HEIGHT = int(model.input_shape[1])
+        IMG_WIDTH = int(model.input_shape[2])
+
+        NUM_CLASSES = int(model.output_shape[-1])
+
+        print("Plant Disease Model Loaded!")
+
+        print("Input Shape:", model.input_shape)
+        print("Output Shape:", model.output_shape)
+
+    return model
 
 print("Plant Disease Model Loaded Successfully!")
 
@@ -127,7 +162,10 @@ def allowed_file(filename):
 
 def preprocess_image(uploaded_file):
 
-    # Read uploaded image bytes
+    from tensorflow.keras.preprocessing import image
+
+    current_model = get_model()
+
     uploaded_file.stream.seek(0)
 
     image_bytes = uploaded_file.stream.read()
@@ -135,31 +173,23 @@ def preprocess_image(uploaded_file):
     if not image_bytes:
         raise ValueError("Uploaded image is empty.")
 
-    # Convert image bytes into BytesIO
     image_stream = BytesIO(image_bytes)
 
-    # Load image with model dimensions
     img = image.load_img(
         image_stream,
         target_size=(IMG_HEIGHT, IMG_WIDTH),
         color_mode="rgb"
     )
 
-    # Convert image into NumPy array
     img_array = image.img_to_array(img)
 
-    # Add batch dimension
     img_array = np.expand_dims(
         img_array,
         axis=0
     )
 
-    # Apply normalization only if used during training
     if NORMALIZE:
         img_array = img_array / 255.0
-
-    print("Processed Image Shape:", img_array.shape)
-    print("Pixel Range:", img_array.min(), "to", img_array.max())
 
     return img_array
 
@@ -170,34 +200,27 @@ def preprocess_image(uploaded_file):
 
 def predict_plant_disease(uploaded_file):
 
-    # Preprocess uploaded image
+    current_model = get_model()
+
     img_array = preprocess_image(uploaded_file)
 
-    # Generate prediction
-    predictions = model.predict(
+    predictions = current_model.predict(
         img_array,
         verbose=0
     )[0]
 
-    # Find predicted class index
     predicted_index = int(np.argmax(predictions))
 
-    # Get disease name
     predicted_disease = CLASS_NAMES[predicted_index]
 
-    # Calculate confidence
     confidence = float(
         predictions[predicted_index] * 100
     )
 
-    # Return prediction result
-    result = {
+    return {
         "disease": predicted_disease,
         "confidence": round(confidence, 2)
     }
-
-    return result
-
 
 # ============================================================
 # 8. FLASK PREDICTION API
@@ -296,8 +319,8 @@ def disease_health():
 
         "model_loaded": model is not None,
 
-        "number_of_classes": NUM_CLASSES,
-
+        "number_of_classes": len(CLASS_NAMES),
+        
         "image_size": [
             IMG_HEIGHT,
             IMG_WIDTH
