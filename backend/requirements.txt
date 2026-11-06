@@ -6,3 +6,4 @@ gunicorn
 numpy
 joblib
 huggingface_hub
+tensorflow-cpu==2.21.0
