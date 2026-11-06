@@ -82,15 +82,31 @@ def get_model():
 
         print("Loading Plant Disease Model...")
 
-        model = load_model(
-            MODEL_PATH,
-            compile=False
-        )
+       # Load trained model
+    print("Loading model from:", MODEL_PATH)
 
-        IMG_HEIGHT = int(model.input_shape[1])
-        IMG_WIDTH = int(model.input_shape[2])
+    disease_model = load_model(
+        MODEL_PATH,
+        compile=False
+    )
 
-        NUM_CLASSES = int(model.output_shape[-1])
+    print("Model loading completed.")
+    print("Model object:", disease_model)
+    print("Model type:", type(disease_model))
+
+    if disease_model is None:
+        raise ValueError("TensorFlow returned None while loading the model.")
+
+        print("Model inputs:", disease_model.inputs)
+        print("Model outputs:", disease_model.outputs)
+
+        IMG_HEIGHT = int(disease_model.input_shape[1])
+        IMG_WIDTH = int(disease_model.input_shape[2])
+        NUM_CLASSES = int(disease_model.output_shape[-1])
+
+        print("Image Height:", IMG_HEIGHT)
+        print("Image Width:", IMG_WIDTH)
+        print("Number of Classes:", NUM_CLASSES)
 
         print("Plant Disease Model Loaded!")
 
