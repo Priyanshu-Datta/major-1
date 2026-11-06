@@ -1,29 +1,26 @@
 import { useState } from "react";
-
 import "./diseasedetection.css";
 
+// ============================================================
+// BACKEND CONFIGURATION
+// ============================================================
 
-function diseasedetection() {
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://major-1-1.onrender.com"
+).replace(/\/+$/, "");
+
+function DiseaseDetection() {
 
   // ============================================================
   // 1. STATES
   // ============================================================
 
   const [selectedImage, setSelectedImage] = useState(null);
-
   const [preview, setPreview] = useState(null);
-
   const [result, setResult] = useState(null);
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
-
-
-  // Flask backend URL
-  const API_URL = import.meta.env.VITE_API_BASE_URL
-    || "https://major-1-1.onrender.com/predict-disease";
-
 
   // ============================================================
   // 2. IMAGE UPLOAD
@@ -38,87 +35,101 @@ function diseasedetection() {
     setError("");
     setResult(null);
 
-    if (!["image/jpeg", "image/png"].includes(file.type)
-        && file.type !== "image/jpg") {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png"
+    ];
 
+    if (!allowedTypes.includes(file.type)) {
       setError("Please upload a JPG, JPEG or PNG image.");
-
+      event.target.value = "";
       return;
     }
 
+    // Revoke previous preview URL
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
     setSelectedImage(file);
-
     setPreview(URL.createObjectURL(file));
-
   };
 
-
   // ============================================================
-  // 3. PREDICTION
+  // 3. DISEASE PREDICTION
   // ============================================================
 
   const handlePredict = async () => {
 
     if (!selectedImage) {
-
       setError("Please upload a leaf image first.");
-
       return;
     }
 
     setLoading(true);
-
     setError("");
-
     setResult(null);
 
     try {
 
       const formData = new FormData();
 
-      formData.append(
-        "image",
-        selectedImage
-      );
+      formData.append("image", selectedImage);
+
+      console.log("Sending image to:", `${API_BASE_URL}/predict-disease`);
 
       const response = await fetch(
-        `${API_URL}/predict-disease`,
+        `${API_BASE_URL}/predict-disease`,
         {
           method: "POST",
           body: formData
         }
       );
 
-      const data = await response.json();
+      // Read response as text first to handle HTML errors safely
+      const responseText = await response.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(
+          `Backend returned an invalid response (HTTP ${response.status}). ` +
+          "Check the Flask backend URL and Render deployment logs."
+        );
+      }
 
       if (!response.ok) {
-
         throw new Error(
-          data.error || "Prediction failed."
+          data.error || `Prediction failed. HTTP ${response.status}`
         );
-
       }
+
+      if (!data.success || !data.disease) {
+        throw new Error(
+          data.error || "Disease prediction was unsuccessful."
+        );
+      }
+
+      console.log("Prediction result:", data);
 
       setResult(data);
 
-    }
+    } catch (err) {
 
-    catch (err) {
+      console.error("Disease prediction error:", err);
 
       setError(
         err.message || "Unable to connect to the backend."
       );
 
-    }
-
-    finally {
+    } finally {
 
       setLoading(false);
 
     }
-
   };
-
 
   // ============================================================
   // 4. RESET
@@ -131,17 +142,17 @@ function diseasedetection() {
     }
 
     setSelectedImage(null);
-
     setPreview(null);
-
     setResult(null);
-
     setError("");
-
     setLoading(false);
 
-  };
+    const fileInput = document.getElementById("leaf-upload");
 
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
 
   // ============================================================
   // 5. UI
@@ -175,7 +186,6 @@ function diseasedetection() {
       {/* MAIN CONTAINER */}
 
       <section className="disease-container">
-
 
         {/* UPLOAD CARD */}
 
@@ -245,9 +255,7 @@ function diseasedetection() {
           {selectedImage && (
 
             <div className="selected-file">
-
               📄 {selectedImage.name}
-
             </div>
 
           )}
@@ -289,9 +297,7 @@ function diseasedetection() {
           {error && (
 
             <div className="disease-error">
-
               ⚠️ {error}
-
             </div>
 
           )}
@@ -303,6 +309,7 @@ function diseasedetection() {
 
         <div className="disease-result-card">
 
+          {/* PLACEHOLDER */}
 
           {!result && !loading && (
 
@@ -445,4 +452,4 @@ function diseasedetection() {
 
 }
 
-export default diseasedetection;
+export default DiseaseDetection;
