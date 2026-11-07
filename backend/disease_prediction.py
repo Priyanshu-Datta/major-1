@@ -3,15 +3,14 @@ import json
 import numpy as np
 
 from io import BytesIO
-
 from flask import Blueprint, request, jsonify
 
-# ============================================================
+
+# =====================================================
 # 1. CONFIGURATION
-# ============================================================
+# =====================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 PROJECT_DIR = os.path.dirname(BASE_DIR)
 
 MODEL_PATH = os.path.join(
@@ -27,15 +26,12 @@ CLASS_PATH = os.path.join(
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
-# Keep False because your successful notebook prediction
-# used raw pixel values without dividing by 255.
-
 NORMALIZE = False
 
 
-# ============================================================
-# 2. CREATE BLUEPRINT
-# ============================================================
+# =====================================================
+# 2. BLUEPRINT
+# =====================================================
 
 disease_bp = Blueprint(
     "disease",
@@ -43,22 +39,9 @@ disease_bp = Blueprint(
 )
 
 
-# ============================================================
-# 3. LOAD TRAINED MODEL
-# ============================================================
-
-print("\n========================================")
-print("LOADING PLANT DISEASE DETECTION MODEL")
-print("========================================")
-
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(
-        f"Model not found: {MODEL_PATH}"
-    )
-
-# ============================================================
-# LAZY MODEL LOADING
-# ============================================================
+# =====================================================
+# 3. GLOBAL VARIABLES
+# =====================================================
 
 model = None
 
@@ -66,6 +49,38 @@ IMG_HEIGHT = None
 IMG_WIDTH = None
 NUM_CLASSES = None
 
+CLASS_NAMES = []
+
+
+# =====================================================
+# 4. CHECK MODEL FILE
+# =====================================================
+
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(
+        f"Model not found: {MODEL_PATH}"
+    )
+
+
+# =====================================================
+# 5. LOAD CLASS NAMES
+# =====================================================
+
+if not os.path.exists(CLASS_PATH):
+    raise FileNotFoundError(
+        f"Class names not found: {CLASS_PATH}"
+    )
+
+with open(CLASS_PATH, "r") as file:
+    CLASS_NAMES = json.load(file)
+
+if not isinstance(CLASS_NAMES, list):
+    raise ValueError("Invalid class_names.json")
+
+
+# =====================================================
+# 6. LAZY MODEL LOADING
+# =====================================================
 
 def get_model():
 
@@ -82,85 +97,42 @@ def get_model():
 
         print("Loading Plant Disease Model...")
 
-       # Load trained model
-    print("Loading model from:", MODEL_PATH)
+        loaded_model = load_model(
+            MODEL_PATH,
+            compile=False
+        )
 
-    disease_model = load_model(
-        MODEL_PATH,
-        compile=False
-    )
+        if loaded_model is None:
+            raise ValueError("Model loading failed.")
 
-    print("Model loading completed.")
-    print("Model object:", disease_model)
-    print("Model type:", type(disease_model))
+        model = loaded_model
 
-    if disease_model is None:
-        raise ValueError("TensorFlow returned None while loading the model.")
+        IMG_HEIGHT = int(model.input_shape[1])
+        IMG_WIDTH = int(model.input_shape[2])
 
-        print("Model inputs:", disease_model.inputs)
-        print("Model outputs:", disease_model.outputs)
+        NUM_CLASSES = int(model.output_shape[-1])
 
-        IMG_HEIGHT = int(disease_model.input_shape[1])
-        IMG_WIDTH = int(disease_model.input_shape[2])
-        NUM_CLASSES = int(disease_model.output_shape[-1])
+        if len(CLASS_NAMES) != NUM_CLASSES:
+            raise ValueError(
+                f"Expected {NUM_CLASSES} classes, "
+                f"but found {len(CLASS_NAMES)}."
+            )
+
+        print("Plant Disease Model Loaded Successfully!")
+
+        print("Input Shape:", model.input_shape)
+        print("Output Shape:", model.output_shape)
 
         print("Image Height:", IMG_HEIGHT)
         print("Image Width:", IMG_WIDTH)
         print("Number of Classes:", NUM_CLASSES)
 
-        print("Plant Disease Model Loaded!")
-
-        print("Input Shape:", model.input_shape)
-        print("Output Shape:", model.output_shape)
-
     return model
 
-print("Plant Disease Model Loaded Successfully!")
 
-# Get model input dimensions
-
-IMG_HEIGHT = int(model.input_shape[1])
-IMG_WIDTH = int(model.input_shape[2])
-
-NUM_CLASSES = int(model.output_shape[-1])
-
-print("Model Input Shape:", model.input_shape)
-print("Model Output Shape:", model.output_shape)
-print("Image Height:", IMG_HEIGHT)
-print("Image Width:", IMG_WIDTH)
-print("Number of Classes:", NUM_CLASSES)
-
-
-# ============================================================
-# 4. LOAD CLASS NAMES
-# ============================================================
-
-if not os.path.exists(CLASS_PATH):
-    raise FileNotFoundError(
-        f"Class names file not found: {CLASS_PATH}"
-    )
-
-with open(CLASS_PATH, "r") as file:
-    CLASS_NAMES = json.load(file)
-
-if not isinstance(CLASS_NAMES, list):
-    raise ValueError(
-        "class_names.json must contain a JSON list."
-    )
-
-if len(CLASS_NAMES) != NUM_CLASSES:
-    raise ValueError(
-        f"Model expects {NUM_CLASSES} classes, "
-        f"but class_names.json contains {len(CLASS_NAMES)}."
-    )
-
-print("Total Classes Loaded:", len(CLASS_NAMES))
-print("Class Names Loaded Successfully!")
-
-
-# ============================================================
-# 5. CHECK IMAGE EXTENSION
-# ============================================================
+# =====================================================
+# 7. CHECK IMAGE EXTENSION
+# =====================================================
 
 def allowed_file(filename):
 
@@ -172,9 +144,9 @@ def allowed_file(filename):
     )
 
 
-# ============================================================
-# 6. IMAGE PREPROCESSING
-# ============================================================
+# =====================================================
+# 8. IMAGE PREPROCESSING
+# =====================================================
 
 def preprocess_image(uploaded_file):
 
@@ -210,9 +182,9 @@ def preprocess_image(uploaded_file):
     return img_array
 
 
-# ============================================================
-# 7. PLANT DISEASE PREDICTION FUNCTION
-# ============================================================
+# =====================================================
+# 9. DISEASE PREDICTION
+# =====================================================
 
 def predict_plant_disease(uploaded_file):
 
@@ -225,7 +197,9 @@ def predict_plant_disease(uploaded_file):
         verbose=0
     )[0]
 
-    predicted_index = int(np.argmax(predictions))
+    predicted_index = int(
+        np.argmax(predictions)
+    )
 
     predicted_disease = CLASS_NAMES[predicted_index]
 
@@ -238,9 +212,10 @@ def predict_plant_disease(uploaded_file):
         "confidence": round(confidence, 2)
     }
 
-# ============================================================
-# 8. FLASK PREDICTION API
-# ============================================================
+
+# =====================================================
+# 10. PREDICTION API
+# =====================================================
 
 @disease_bp.route(
     "/predict-disease",
@@ -251,7 +226,6 @@ def predict_disease_api():
 
     try:
 
-        # Check whether image exists
         if "image" not in request.files:
 
             return jsonify({
@@ -261,7 +235,6 @@ def predict_disease_api():
 
         image_file = request.files["image"]
 
-        # Check filename
         if image_file.filename == "":
 
             return jsonify({
@@ -269,27 +242,15 @@ def predict_disease_api():
                 "error": "Please select an image."
             }), 400
 
-        # Check image extension
         if not allowed_file(image_file.filename):
 
             return jsonify({
                 "success": False,
-                "error": "Only JPG, JPEG and PNG images are allowed."
+                "error": "Only JPG, JPEG and PNG allowed."
             }), 400
 
-        # Generate prediction
-        result = predict_plant_disease(
-            image_file
-        )
+        result = predict_plant_disease(image_file)
 
-        print("\n========================================")
-        print("PLANT DISEASE PREDICTION")
-        print("========================================")
-        print("Disease:", result["disease"])
-        print("Confidence:", result["confidence"], "%")
-        print("========================================")
-
-        # Return successful response
         return jsonify({
 
             "success": True,
@@ -304,8 +265,7 @@ def predict_disease_api():
 
     except Exception as e:
 
-        print("\nPLANT DISEASE PREDICTION ERROR:")
-        print(str(e))
+        print("DISEASE PREDICTION ERROR:", str(e))
 
         return jsonify({
 
@@ -316,9 +276,9 @@ def predict_disease_api():
         }), 500
 
 
-# ============================================================
-# 9. API HEALTH CHECK
-# ============================================================
+# =====================================================
+# 11. HEALTH CHECK
+# =====================================================
 
 @disease_bp.route(
     "/disease-health",
@@ -331,12 +291,12 @@ def disease_health():
 
         "success": True,
 
-        "message": "Plant Disease Detection API is running.",
+        "message": "Plant Disease API is running.",
 
         "model_loaded": model is not None,
 
         "number_of_classes": len(CLASS_NAMES),
-        
+
         "image_size": [
             IMG_HEIGHT,
             IMG_WIDTH
