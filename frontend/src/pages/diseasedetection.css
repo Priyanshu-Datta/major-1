@@ -384,3 +384,55 @@
     }
 
 }
+
+/* TOP 3 PREDICTIONS */
+
+.top-predictions {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f4faf5;
+    border: 1px solid #d8eadb;
+    border-radius: 14px;
+}
+
+.top-predictions h3 {
+    font-size: 18px;
+    color: #174d2b;
+    margin-bottom: 20px;
+}
+
+.top-prediction-item {
+    margin-bottom: 18px;
+}
+
+.prediction-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.prediction-info span {
+    color: #344b3b;
+    font-size: 14px;
+}
+
+.prediction-info strong {
+    color: #218447;
+}
+
+.mini-confidence-bar {
+    width: 100%;
+    height: 8px;
+    background: #dce9df;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.mini-confidence-fill {
+    height: 100%;
+    background: #238447;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}

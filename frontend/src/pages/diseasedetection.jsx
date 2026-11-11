@@ -10,6 +10,7 @@ const API_BASE_URL = (
   "https://major-1-1.onrender.com"
 ).replace(/\/+$/, "");
 
+
 function DiseaseDetection() {
 
   // ============================================================
@@ -21,6 +22,7 @@ function DiseaseDetection() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   // ============================================================
   // 2. IMAGE UPLOAD
@@ -41,8 +43,11 @@ function DiseaseDetection() {
     ];
 
     if (!allowedTypes.includes(file.type)) {
+
       setError("Please upload a JPG, JPEG or PNG image.");
+
       event.target.value = "";
+
       return;
     }
 
@@ -52,8 +57,10 @@ function DiseaseDetection() {
     }
 
     setSelectedImage(file);
+
     setPreview(URL.createObjectURL(file));
   };
+
 
   // ============================================================
   // 3. DISEASE PREDICTION
@@ -62,7 +69,9 @@ function DiseaseDetection() {
   const handlePredict = async () => {
 
     if (!selectedImage) {
+
       setError("Please upload a leaf image first.");
+
       return;
     }
 
@@ -76,7 +85,10 @@ function DiseaseDetection() {
 
       formData.append("image", selectedImage);
 
-      console.log("Sending image to:", `${API_BASE_URL}/predict-disease`);
+      console.log(
+        "Sending image to:",
+        `${API_BASE_URL}/predict-disease`
+      );
 
       const response = await fetch(
         `${API_BASE_URL}/predict-disease`,
@@ -86,30 +98,42 @@ function DiseaseDetection() {
         }
       );
 
-      // Read response as text first to handle HTML errors safely
+      // Read response as text first
       const responseText = await response.text();
 
       let data;
 
       try {
+
         data = JSON.parse(responseText);
+
       } catch {
+
         throw new Error(
           `Backend returned an invalid response (HTTP ${response.status}). ` +
           "Check the Flask backend URL and Render deployment logs."
         );
+
       }
 
+      // Check HTTP response
       if (!response.ok) {
+
         throw new Error(
-          data.error || `Prediction failed. HTTP ${response.status}`
+          data.error ||
+          `Prediction failed. HTTP ${response.status}`
         );
+
       }
 
+      // Check prediction result
       if (!data.success || !data.disease) {
+
         throw new Error(
-          data.error || "Disease prediction was unsuccessful."
+          data.error ||
+          "Disease prediction was unsuccessful."
         );
+
       }
 
       console.log("Prediction result:", data);
@@ -121,7 +145,8 @@ function DiseaseDetection() {
       console.error("Disease prediction error:", err);
 
       setError(
-        err.message || "Unable to connect to the backend."
+        err.message ||
+        "Unable to connect to the backend."
       );
 
     } finally {
@@ -129,7 +154,9 @@ function DiseaseDetection() {
       setLoading(false);
 
     }
+
   };
+
 
   // ============================================================
   // 4. RESET
@@ -152,7 +179,9 @@ function DiseaseDetection() {
     if (fileInput) {
       fileInput.value = "";
     }
+
   };
+
 
   // ============================================================
   // 5. UI
@@ -161,6 +190,7 @@ function DiseaseDetection() {
   return (
 
     <div className="disease-page">
+
 
       {/* HEADER */}
 
@@ -186,6 +216,7 @@ function DiseaseDetection() {
       {/* MAIN CONTAINER */}
 
       <section className="disease-container">
+
 
         {/* UPLOAD CARD */}
 
@@ -309,6 +340,7 @@ function DiseaseDetection() {
 
         <div className="disease-result-card">
 
+
           {/* PLACEHOLDER */}
 
           {!result && !loading && (
@@ -396,7 +428,7 @@ function DiseaseDetection() {
                 </span>
 
                 <strong>
-                  {result.confidence}%
+                  {Number(result.confidence).toFixed(2)}%
                 </strong>
 
 
@@ -407,7 +439,10 @@ function DiseaseDetection() {
                     style={{
                       width: `${Math.min(
                         100,
-                        Math.max(0, result.confidence)
+                        Math.max(
+                          0,
+                          Number(result.confidence) || 0
+                        )
                       )}%`
                     }}
                   />
@@ -415,6 +450,64 @@ function DiseaseDetection() {
                 </div>
 
               </div>
+
+
+              {/* TOP 3 PREDICTIONS */}
+
+              {Array.isArray(result.top_predictions) &&
+                result.top_predictions.length > 0 && (
+
+                  <div className="top-predictions">
+
+                    <h3>
+                      Top 3 Disease Predictions
+                    </h3>
+
+                    {result.top_predictions.map((item, index) => (
+
+                      <div
+                        className="top-prediction-item"
+                        key={index}
+                      >
+
+                        <div className="prediction-info">
+
+                          <span>
+                            {index + 1}.{" "}
+                            {item.disease.replaceAll("_", " ")}
+                          </span>
+
+                          <strong>
+                            {Number(item.confidence).toFixed(2)}%
+                          </strong>
+
+                        </div>
+
+
+                        <div className="mini-confidence-bar">
+
+                          <div
+                            className="mini-confidence-fill"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  Number(item.confidence) || 0
+                                )
+                              )}%`
+                            }}
+                          />
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
 
 
               {/* STATUS */}
@@ -432,10 +525,14 @@ function DiseaseDetection() {
               </div>
 
 
+              {/* DISCLAIMER */}
+
               <p className="result-disclaimer">
+
                 This result is generated by a trained
                 machine learning model. Verify important
                 agricultural decisions with an expert.
+
               </p>
 
             </div>
@@ -451,5 +548,6 @@ function DiseaseDetection() {
   );
 
 }
+
 
 export default DiseaseDetection;
