@@ -1,8 +1,49 @@
+import os
+import sys
+import pickle
+import importlib
+
+import numpy as np
+import numpy.core
+
+import pandas as pd
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pickle
-import pandas as pd
-import os
+
+# ============================================================
+# NUMPY 2.x PICKLE COMPATIBILITY
+# ============================================================
+
+# Map NumPy 2.x internal module paths to NumPy 1.26 modules.
+
+sys.modules["numpy._core"] = numpy.core
+
+NUMPY_MODULES = [
+    "numeric",
+    "multiarray",
+    "umath",
+    "numerictypes",
+    "fromnumeric",
+    "shape_base",
+    "_multiarray_umath"
+]
+
+for module_name in NUMPY_MODULES:
+
+    try:
+        old_module = importlib.import_module(
+            f"numpy.core.{module_name}"
+        )
+
+        sys.modules[
+            f"numpy._core.{module_name}"
+        ] = old_module
+
+    except ImportError:
+        pass
+
+print("NumPy compatibility configured:", np.__version__)
 
 app = Flask(__name__)
 CORS(app)
