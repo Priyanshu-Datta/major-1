@@ -48,7 +48,7 @@ function Home() {
               to="/page3"
               className="secondary-button"
             >
-              Wheather
+              Weather
             </Link>
 
           </div>
