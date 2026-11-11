@@ -43,15 +43,15 @@ function Footer() {
           </Link>
 
           <Link to="/page3">
-            Part 3
+            Weather Dashboard
           </Link>
 
           <Link to="/page4">
-            Part 4
+            Plant Disease
           </Link>
 
           <Link to="/page5">
-            Part 5
+            Treatment Guide
           </Link>
 
         </div>

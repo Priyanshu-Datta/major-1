@@ -211,27 +211,6 @@ function Home() {
       </section>
 
 
-      {/* FUTURE MODULES */}
-
-      <section className="future-section">
-
-        <div className="section-label">
-          PROJECT MODULES
-        </div>
-
-        <h2>
-          More modules are coming.
-        </h2>
-
-        <p>
-          The platform will contain multiple
-          agriculture-focused modules. The remaining
-          modules will be added as the project
-          development progresses.
-        </p>
-
-      </section>
-
     </div>
   );
 }
