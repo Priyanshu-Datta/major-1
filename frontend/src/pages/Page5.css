@@ -1,0 +1,357 @@
+/* =========================================
+   PAGE 5 - PLANT DISEASE TREATMENT GUIDE
+========================================= */
+
+.treatment-page {
+  min-height: 100vh;
+  background: #f5faf6;
+  padding: 55px 7%;
+  color: #1b2b20;
+  box-sizing: border-box;
+}
+
+.treatment-page * {
+  box-sizing: border-box;
+}
+
+/* HERO SECTION */
+
+.treatment-hero {
+  max-width: 1000px;
+  margin: 0 auto 45px;
+  text-align: center;
+}
+
+.treatment-tag {
+  display: inline-block;
+  background: #e2f3e7;
+  color: #198343;
+  padding: 9px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 18px;
+}
+
+.treatment-hero h1 {
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 800;
+  margin-bottom: 15px;
+  color: #17291c;
+}
+
+.treatment-hero > p {
+  color: #68776c;
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 720px;
+  margin: 0 auto 30px;
+}
+
+/* SEARCH BAR */
+
+.treatment-search {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  max-width: 750px;
+  margin: 0 auto 22px;
+  background: white;
+  border: 1px solid #dce9df;
+  border-radius: 14px;
+  padding: 8px 17px;
+  box-shadow: 0 5px 20px rgba(20, 80, 40, 0.06);
+}
+
+.treatment-search span {
+  font-size: 21px;
+}
+
+.treatment-search input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  padding: 13px 5px;
+  font-size: 16px;
+  background: transparent;
+  color: #24352a;
+}
+
+.treatment-search input::placeholder {
+  color: #9aa79d;
+}
+
+.treatment-search button {
+  border: none;
+  background: #e7f5eb;
+  color: #168143;
+  padding: 9px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* CROP FILTER */
+
+.treatment-filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.treatment-filters label {
+  color: #526256;
+  font-weight: 600;
+}
+
+.treatment-filters select {
+  padding: 10px 15px;
+  border: 1px solid #cfe2d3;
+  border-radius: 9px;
+  background: white;
+  color: #207d42;
+  outline: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* RESULT COUNT */
+
+.treatment-count {
+  color: #738076;
+  font-size: 14px;
+}
+
+/* DISEASE GRID */
+
+.treatment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.treatment-card {
+  background: white;
+  border: 1px solid #e0ebe3;
+  border-radius: 18px;
+  padding: 25px;
+  box-shadow: 0 7px 25px rgba(31, 89, 47, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.treatment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(31, 89, 47, 0.10);
+}
+
+.treatment-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+
+.crop-badge {
+  background: #e8f5eb;
+  color: #247a40;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.disease-badge {
+  background: #fff0e8;
+  color: #c66a2d;
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.health-badge {
+  background: #e4f6e8;
+  color: #218344;
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.treatment-card h2 {
+  color: #1e3927;
+  font-size: 21px;
+  margin: 0 0 12px;
+  font-weight: 750;
+}
+
+.treatment-short {
+  color: #718076;
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 70px;
+  margin-bottom: 20px;
+}
+
+/* DETAILS BUTTON */
+
+.treatment-details-btn {
+  width: 100%;
+  padding: 13px 15px;
+  border: none;
+  border-radius: 10px;
+  background: #e9f5ec;
+  color: #197d3e;
+  font-weight: 750;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.treatment-details-btn:hover {
+  background: #d4edda;
+}
+
+/* EXPANDED DETAILS */
+
+.treatment-details {
+  margin-top: 22px;
+  border-top: 1px solid #e5eee7;
+  padding-top: 10px;
+  animation: page5Fade 0.3s ease;
+}
+
+@keyframes page5Fade {
+  from {
+    opacity: 0;
+    transform: translateY(-7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.treatment-details > div {
+  padding: 13px 0;
+  border-bottom: 1px solid #edf2ee;
+}
+
+.treatment-details > div:last-child {
+  border-bottom: none;
+}
+
+.treatment-details h3 {
+  color: #247b42;
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.treatment-details p {
+  color: #68776d;
+  font-size: 14px;
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* NO SEARCH RESULTS */
+
+.no-treatment-results {
+  text-align: center;
+  background: white;
+  padding: 60px 20px;
+  border-radius: 18px;
+  border: 1px solid #e1ece4;
+}
+
+.no-treatment-results span {
+  font-size: 45px;
+}
+
+.no-treatment-results h2 {
+  margin: 15px 0 10px;
+  color: #1e3927;
+}
+
+.no-treatment-results p {
+  color: #78847b;
+  margin-bottom: 20px;
+}
+
+.no-treatment-results button {
+  background: #218345;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* DISCLAIMER */
+
+.treatment-disclaimer {
+  margin-top: 45px;
+  padding: 24px 28px;
+  background: #fff9eb;
+  border: 1px solid #f0e2b8;
+  border-radius: 14px;
+}
+
+.treatment-disclaimer h3 {
+  color: #936b17;
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.treatment-disclaimer p {
+  color: #766c53;
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 850px) {
+  .treatment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .treatment-page {
+    padding: 40px 5%;
+  }
+}
+
+@media (max-width: 500px) {
+  .treatment-page {
+    padding: 30px 4%;
+  }
+
+  .treatment-card {
+    padding: 19px;
+  }
+
+  .treatment-hero > p {
+    font-size: 15px;
+  }
+
+  .treatment-search {
+    padding: 7px 10px;
+  }
+
+  .treatment-search input {
+    font-size: 14px;
+  }
+
+  .treatment-filters {
+    flex-wrap: wrap;
+  }
+}
