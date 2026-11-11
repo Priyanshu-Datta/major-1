@@ -6,548 +6,565 @@ import "./diseasedetection.css";
 // ============================================================
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://major-1-1.onrender.com"
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://major-1-1.onrender.com"
 ).replace(/\/+$/, "");
 
 
+// ============================================================
+// FORMAT DISEASE NAMES
+// ============================================================
+
+const formatDiseaseName = (name) => {
+    return String(name || "")
+        .replace(/___/g, " - ")
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, char => char.toUpperCase());
+};
+
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
 function DiseaseDetection() {
 
-  // ============================================================
-  // 1. STATES
-  // ============================================================
+    // ============================================================
+    // 1. STATES
+    // ============================================================
 
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-
-  // ============================================================
-  // 2. IMAGE UPLOAD
-  // ============================================================
-
-  const handleImageChange = (event) => {
-
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    setError("");
-    setResult(null);
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-
-      setError("Please upload a JPG, JPEG or PNG image.");
-
-      event.target.value = "";
-
-      return;
-    }
-
-    // Revoke previous preview URL
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
-
-    setSelectedImage(file);
-
-    setPreview(URL.createObjectURL(file));
-  };
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
 
-  // ============================================================
-  // 3. DISEASE PREDICTION
-  // ============================================================
+    // ============================================================
+    // 2. IMAGE UPLOAD
+    // ============================================================
 
-  const handlePredict = async () => {
+    const handleImageChange = (event) => {
 
-    if (!selectedImage) {
+        const file = event.target.files[0];
 
-      setError("Please upload a leaf image first.");
+        if (!file) return;
 
-      return;
-    }
+        setError("");
+        setResult(null);
 
-    setLoading(true);
-    setError("");
-    setResult(null);
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png"
+        ];
 
-    try {
+        if (!allowedTypes.includes(file.type)) {
 
-      const formData = new FormData();
+            setError("Please upload a JPG, JPEG or PNG image.");
 
-      formData.append("image", selectedImage);
+            event.target.value = "";
 
-      console.log(
-        "Sending image to:",
-        `${API_BASE_URL}/predict-disease`
-      );
-
-      const response = await fetch(
-        `${API_BASE_URL}/predict-disease`,
-        {
-          method: "POST",
-          body: formData
+            return;
         }
-      );
 
-      // Read response as text first
-      const responseText = await response.text();
+        if (preview) {
+            URL.revokeObjectURL(preview);
+        }
 
-      let data;
+        setSelectedImage(file);
 
-      try {
+        setPreview(URL.createObjectURL(file));
+    };
 
-        data = JSON.parse(responseText);
 
-      } catch {
+    // ============================================================
+    // 3. DISEASE PREDICTION
+    // ============================================================
 
-        throw new Error(
-          `Backend returned an invalid response (HTTP ${response.status}). ` +
-          "Check the Flask backend URL and Render deployment logs."
-        );
+    const handlePredict = async () => {
 
-      }
+        if (!selectedImage) {
 
-      // Check HTTP response
-      if (!response.ok) {
+            setError("Please upload a leaf image first.");
 
-        throw new Error(
-          data.error ||
-          `Prediction failed. HTTP ${response.status}`
-        );
+            return;
+        }
 
-      }
+        setLoading(true);
+        setError("");
+        setResult(null);
 
-      // Check prediction result
-      if (!data.success || !data.disease) {
+        try {
 
-        throw new Error(
-          data.error ||
-          "Disease prediction was unsuccessful."
-        );
+            const formData = new FormData();
 
-      }
+            formData.append("image", selectedImage);
 
-      console.log("Prediction result:", data);
+            console.log(
+                "Sending image to:",
+                `${API_BASE_URL}/predict-disease`
+            );
 
-      setResult(data);
+            const response = await fetch(
+                `${API_BASE_URL}/predict-disease`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
 
-    } catch (err) {
+            const responseText = await response.text();
 
-      console.error("Disease prediction error:", err);
+            let data;
 
-      setError(
-        err.message ||
-        "Unable to connect to the backend."
-      );
+            try {
 
-    } finally {
+                data = JSON.parse(responseText);
 
-      setLoading(false);
+            } catch {
 
-    }
+                throw new Error(
+                    `Backend returned an invalid response (HTTP ${response.status}). ` +
+                    "Check the Flask backend URL and Render deployment logs."
+                );
 
-  };
+            }
 
+            if (!response.ok) {
 
-  // ============================================================
-  // 4. RESET
-  // ============================================================
+                throw new Error(
+                    data.error ||
+                    `Prediction failed. HTTP ${response.status}`
+                );
 
-  const handleReset = () => {
+            }
 
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
+            if (!data.success || !data.disease) {
 
-    setSelectedImage(null);
-    setPreview(null);
-    setResult(null);
-    setError("");
-    setLoading(false);
+                throw new Error(
+                    data.error ||
+                    "Disease prediction was unsuccessful."
+                );
 
-    const fileInput = document.getElementById("leaf-upload");
+            }
 
-    if (fileInput) {
-      fileInput.value = "";
-    }
+            console.log("Prediction result:", data);
 
-  };
+            setResult(data);
 
+        } catch (err) {
 
-  // ============================================================
-  // 5. UI
-  // ============================================================
+            console.error("Disease prediction error:", err);
 
-  return (
+            setError(
+                err.message ||
+                "Unable to connect to the backend."
+            );
 
-    <div className="disease-page">
+        } finally {
 
+            setLoading(false);
 
-      {/* HEADER */}
+        }
 
-      <section className="disease-heading">
+    };
 
-        <span className="disease-label">
-          🌿 CROPSENSE INTELLIGENCE
-        </span>
 
-        <h1>
-          Plant Disease Detection
-        </h1>
+    // ============================================================
+    // 4. RESET
+    // ============================================================
 
-        <p>
-          Identify plant diseases using deep learning
-          and advanced image processing.
-          Upload a leaf image to analyze its health.
-        </p>
+    const handleReset = () => {
 
-      </section>
+        if (preview) {
+            URL.revokeObjectURL(preview);
+        }
 
+        setSelectedImage(null);
+        setPreview(null);
+        setResult(null);
+        setError("");
+        setLoading(false);
 
-      {/* MAIN CONTAINER */}
+        const fileInput = document.getElementById("leaf-upload");
 
-      <section className="disease-container">
+        if (fileInput) {
+            fileInput.value = "";
+        }
 
+    };
 
-        {/* UPLOAD CARD */}
 
-        <div className="disease-upload-card">
+    // ============================================================
+    // 5. UI
+    // ============================================================
 
-          <div className="disease-icon">
-            🌱
-          </div>
+    return (
 
-          <h2>
-            Upload Leaf Image
-          </h2>
+        <div className="disease-page">
 
-          <p>
-            Select a clear image of the plant leaf
-            for disease detection.
-          </p>
+            {/* HEADER */}
 
+            <section className="disease-heading">
 
-          {/* IMAGE UPLOAD */}
-
-          <label
-            htmlFor="leaf-upload"
-            className="upload-area"
-          >
-
-            {preview ? (
-
-              <img
-                src={preview}
-                alt="Uploaded leaf"
-                className="leaf-preview"
-              />
-
-            ) : (
-
-              <div className="upload-placeholder">
-
-                <span>📸</span>
-
-                <strong>
-                  Click to upload image
-                </strong>
-
-                <small>
-                  JPG, JPEG or PNG
-                </small>
-
-              </div>
-
-            )}
-
-          </label>
-
-
-          <input
-            id="leaf-upload"
-            type="file"
-            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-            onChange={handleImageChange}
-            hidden
-          />
-
-
-          {/* FILE NAME */}
-
-          {selectedImage && (
-
-            <div className="selected-file">
-              📄 {selectedImage.name}
-            </div>
-
-          )}
-
-
-          {/* BUTTONS */}
-
-          <div className="disease-buttons">
-
-            <button
-              className="predict-button"
-              onClick={handlePredict}
-              disabled={loading || !selectedImage}
-            >
-
-              {loading
-                ? "Analyzing Leaf..."
-                : "Detect Disease →"
-              }
-
-            </button>
-
-
-            <button
-              className="reset-button"
-              onClick={handleReset}
-              disabled={loading}
-            >
-
-              Reset
-
-            </button>
-
-          </div>
-
-
-          {/* ERROR */}
-
-          {error && (
-
-            <div className="disease-error">
-              ⚠️ {error}
-            </div>
-
-          )}
-
-        </div>
-
-
-        {/* RESULT CARD */}
-
-        <div className="disease-result-card">
-
-
-          {/* PLACEHOLDER */}
-
-          {!result && !loading && (
-
-            <div className="result-placeholder">
-
-              <div className="result-icon">
-                🌿
-              </div>
-
-              <h2>
-                Detection Results
-              </h2>
-
-              <p>
-                Upload a plant leaf image and click
-                Detect Disease to see the prediction.
-              </p>
-
-            </div>
-
-          )}
-
-
-          {/* LOADING */}
-
-          {loading && (
-
-            <div className="result-placeholder">
-
-              <div className="loading-icon">
-                🌱
-              </div>
-
-              <h2>
-                Analyzing Image...
-              </h2>
-
-              <p>
-                Our deep learning model is examining
-                the leaf and identifying possible diseases.
-              </p>
-
-            </div>
-
-          )}
-
-
-          {/* PREDICTION RESULTS */}
-
-          {result && (
-
-            <div className="disease-results">
-
-              <span className="disease-label">
-                PREDICTION SUCCESSFUL
-              </span>
-
-              <h2>
-                Analysis Complete
-              </h2>
-
-
-              {/* DISEASE */}
-
-              <div className="detected-disease">
-
-                <span>
-                  🌿 DETECTED CONDITION
+                <span className="disease-label">
+                    🌿 CROPSENSE INTELLIGENCE
                 </span>
 
                 <h1>
-                  {result.disease.replaceAll("_", " ")}
+                    Plant Disease Detection
                 </h1>
 
-              </div>
+                <p>
+                    Identify plant diseases using deep learning
+                    and advanced image processing.
+                    Upload a leaf image to analyze its health.
+                </p>
+
+            </section>
 
 
-              {/* CONFIDENCE */}
+            {/* MAIN CONTAINER */}
 
-              <div className="confidence-card">
-
-                <span>
-                  Prediction Confidence
-                </span>
-
-                <strong>
-                  {Number(result.confidence).toFixed(2)}%
-                </strong>
+            <section className="disease-container">
 
 
-                <div className="confidence-bar">
+                {/* UPLOAD CARD */}
 
-                  <div
-                    className="confidence-fill"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.max(
-                          0,
-                          Number(result.confidence) || 0
-                        )
-                      )}%`
-                    }}
-                  />
+                <div className="disease-upload-card">
+
+                    <div className="disease-icon">
+                        🌱
+                    </div>
+
+                    <h2>
+                        Upload Leaf Image
+                    </h2>
+
+                    <p>
+                        Select a clear image of the plant leaf
+                        for disease detection.
+                    </p>
+
+
+                    {/* IMAGE UPLOAD */}
+
+                    <label
+                        htmlFor="leaf-upload"
+                        className="upload-area"
+                    >
+
+                        {preview ? (
+
+                            <img
+                                src={preview}
+                                alt="Uploaded leaf"
+                                className="leaf-preview"
+                            />
+
+                        ) : (
+
+                            <div className="upload-placeholder">
+
+                                <span>📸</span>
+
+                                <strong>
+                                    Click to upload image
+                                </strong>
+
+                                <small>
+                                    JPG, JPEG or PNG
+                                </small>
+
+                            </div>
+
+                        )}
+
+                    </label>
+
+
+                    <input
+                        id="leaf-upload"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                        onChange={handleImageChange}
+                        hidden
+                    />
+
+
+                    {/* FILE NAME */}
+
+                    {selectedImage && (
+
+                        <div className="selected-file">
+                            📄 {selectedImage.name}
+                        </div>
+
+                    )}
+
+
+                    {/* BUTTONS */}
+
+                    <div className="disease-buttons">
+
+                        <button
+                            className="predict-button"
+                            onClick={handlePredict}
+                            disabled={loading || !selectedImage}
+                        >
+
+                            {loading
+                                ? "Analyzing Leaf..."
+                                : "Detect Disease →"
+                            }
+
+                        </button>
+
+
+                        <button
+                            className="reset-button"
+                            onClick={handleReset}
+                            disabled={loading}
+                        >
+
+                            Reset
+
+                        </button>
+
+                    </div>
+
+
+                    {/* ERROR */}
+
+                    {error && (
+
+                        <div className="disease-error">
+                            ⚠️ {error}
+                        </div>
+
+                    )}
 
                 </div>
 
-              </div>
+
+                {/* RESULT CARD */}
+
+                <div className="disease-result-card">
 
 
-              {/* TOP 3 PREDICTIONS */}
+                    {/* PLACEHOLDER */}
 
-              {Array.isArray(result.top_predictions) &&
-                result.top_predictions.length > 0 && (
+                    {!result && !loading && (
 
-                  <div className="top-predictions">
+                        <div className="result-placeholder">
 
-                    <h3>
-                      Top 3 Disease Predictions
-                    </h3>
+                            <div className="result-icon">
+                                🌿
+                            </div>
 
-                    {result.top_predictions.map((item, index) => (
+                            <h2>
+                                Detection Results
+                            </h2>
 
-                      <div
-                        className="top-prediction-item"
-                        key={index}
-                      >
-
-                        <div className="prediction-info">
-
-                          <span>
-                            {index + 1}.{" "}
-                            {item.disease.replaceAll("_", " ")}
-                          </span>
-
-                          <strong>
-                            {Number(item.confidence).toFixed(2)}%
-                          </strong>
+                            <p>
+                                Upload a plant leaf image and click
+                                Detect Disease to see the prediction.
+                            </p>
 
                         </div>
 
+                    )}
 
-                        <div className="mini-confidence-bar">
 
-                          <div
-                            className="mini-confidence-fill"
-                            style={{
-                              width: `${Math.min(
-                                100,
-                                Math.max(
-                                  0,
-                                  Number(item.confidence) || 0
-                                )
-                              )}%`
-                            }}
-                          />
+                    {/* LOADING */}
+
+                    {loading && (
+
+                        <div className="result-placeholder">
+
+                            <div className="loading-icon">
+                                🌱
+                            </div>
+
+                            <h2>
+                                Analyzing Image...
+                            </h2>
+
+                            <p>
+                                Our deep learning model is examining
+                                the leaf and identifying possible diseases.
+                            </p>
 
                         </div>
 
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                )}
+                    )}
 
 
-              {/* STATUS */}
+                    {/* PREDICTION RESULTS */}
 
-              <div className="prediction-status">
+                    {result && (
 
-                {result.disease.toLowerCase().includes("healthy")
+                        <div className="disease-results">
 
-                  ? "✅ The model classified this leaf as healthy."
+                            <span className="disease-label">
+                                PREDICTION SUCCESSFUL
+                            </span>
 
-                  : "⚠️ The model detected a potential plant disease."
-
-                }
-
-              </div>
+                            <h2>
+                                Analysis Complete
+                            </h2>
 
 
-              {/* DISCLAIMER */}
+                            {/* DISEASE */}
 
-              <p className="result-disclaimer">
+                            <div className="detected-disease">
 
-                This result is generated by a trained
-                machine learning model. Verify important
-                agricultural decisions with an expert.
+                                <span>
+                                    🌿 DETECTED CONDITION
+                                </span>
 
-              </p>
+                                <h1>
+                                    {formatDiseaseName(result.disease)}
+                                </h1>
 
-            </div>
+                            </div>
 
-          )}
+
+                            {/* CONFIDENCE */}
+
+                            <div className="confidence-card">
+
+                                <span>
+                                    Prediction Confidence
+                                </span>
+
+                                <strong>
+                                    {Number(result.confidence).toFixed(2)}%
+                                </strong>
+
+
+                                <div className="confidence-bar">
+
+                                    <div
+                                        className="confidence-fill"
+                                        style={{
+                                            width: `${Math.min(
+                                                100,
+                                                Math.max(
+                                                    0,
+                                                    Number(result.confidence) || 0
+                                                )
+                                            )}%`
+                                        }}
+                                    />
+
+                                </div>
+
+                            </div>
+
+
+                            {/* TOP 3 PREDICTIONS */}
+
+                            {Array.isArray(result.top_predictions) &&
+                                result.top_predictions.length > 0 && (
+
+                                    <div className="top-predictions">
+
+                                        <h3>
+                                            Top 3 Disease Predictions
+                                        </h3>
+
+                                        {result.top_predictions.map((item, index) => (
+
+                                            <div
+                                                className="top-prediction-item"
+                                                key={index}
+                                            >
+
+                                                <div className="prediction-info">
+
+                                                    <span>
+                                                        {index + 1}.{" "}
+                                                        {formatDiseaseName(item.disease)}
+                                                    </span>
+
+                                                    <strong>
+                                                        {Number(item.confidence).toFixed(2)}%
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <div className="mini-confidence-bar">
+
+                                                    <div
+                                                        className="mini-confidence-fill"
+                                                        style={{
+                                                            width: `${Math.min(
+                                                                100,
+                                                                Math.max(
+                                                                    0,
+                                                                    Number(item.confidence) || 0
+                                                                )
+                                                            )}%`
+                                                        }}
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        ))}
+
+                                    </div>
+
+                                )}
+
+
+                            {/* STATUS */}
+
+                            <div className="prediction-status">
+
+                                {result.disease.toLowerCase().includes("healthy")
+
+                                    ? "✅ The model classified this leaf as healthy."
+
+                                    : "⚠️ The model detected a potential plant disease."
+
+                                }
+
+                            </div>
+
+
+                            {/* DISCLAIMER */}
+
+                            <p className="result-disclaimer">
+
+                                This result is generated by a trained
+                                machine learning model. Verify important
+                                agricultural decisions with an expert.
+
+                            </p>
+
+                        </div>
+
+                    )}
+
+                </div>
+
+            </section>
 
         </div>
 
-      </section>
-
-    </div>
-
-  );
+    );
 
 }
 
+
+// ============================================================
+// EXPORT COMPONENT
+// ============================================================
 
 export default DiseaseDetection;

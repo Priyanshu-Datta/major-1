@@ -1,11 +1,10 @@
 import os
+import threading
 from pathlib import Path
 from io import BytesIO
 
 from flask import Blueprint, request, jsonify
-from ultralytics import YOLO
 from PIL import Image
-
 
 # =========================================
 # CONFIGURATION
@@ -18,33 +17,42 @@ MODEL_PATH = PROJECT_DIR / "model" / "best.pt"
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
-
-# =========================================
-# CREATE BLUEPRINT
-# =========================================
-
 disease_bp = Blueprint("disease", __name__)
 
-
 # =========================================
-# LOAD YOLO MODEL
+# LAZY MODEL LOADING
 # =========================================
 
-print("Loading YOLO Plant Disease Model...")
+model = None
+model_lock = threading.Lock()
 
-if not MODEL_PATH.exists():
-    raise FileNotFoundError(
-        f"Model not found: {MODEL_PATH}"
-    )
 
-model = YOLO(str(MODEL_PATH))
+def get_model():
 
-print("YOLO Model Loaded Successfully!")
+    global model
 
-print("Available Classes:")
-print(model.names)
+    if model is None:
 
-print("Total Classes:", len(model.names))
+        with model_lock:
+
+            if model is None:
+
+                print("Loading YOLO Disease Model...")
+
+                from ultralytics import YOLO
+
+                if not MODEL_PATH.exists():
+                    raise FileNotFoundError(
+                        f"Model not found: {MODEL_PATH}"
+                    )
+
+                model = YOLO(str(MODEL_PATH))
+
+                print("Model loaded successfully!")
+                print("Classes:", model.names)
+                print("Total classes:", len(model.names))
+
+    return model
 
 
 # =========================================
@@ -54,17 +62,20 @@ print("Total Classes:", len(model.names))
 def allowed_file(filename):
 
     return (
-        "." in filename
+        filename != ""
+        and "." in filename
         and filename.rsplit(".", 1)[1].lower()
         in ALLOWED_EXTENSIONS
     )
 
 
 # =========================================
-# PREDICTION FUNCTION
+# DISEASE PREDICTION
 # =========================================
 
 def predict_plant_disease(image_file):
+
+    yolo_model = get_model()
 
     image_bytes = image_file.read()
 
@@ -75,12 +86,15 @@ def predict_plant_disease(image_file):
         BytesIO(image_bytes)
     ).convert("RGB")
 
-    # YOLO Prediction
+    # Limit extremely large images
+    img.thumbnail((1024, 1024))
 
-    results = model.predict(
+    # YOLO classification prediction
+    results = yolo_model.predict(
         source=img,
         verbose=False,
-        device="cpu"
+        device="cpu",
+        imgsz=224
     )
 
     result = results[0]
@@ -89,10 +103,8 @@ def predict_plant_disease(image_file):
 
     if probabilities is None:
         raise ValueError(
-            "The uploaded model does not return classification probabilities."
+            "The model does not return classification probabilities."
         )
-
-    # Top prediction
 
     predicted_index = int(probabilities.top1)
 
@@ -103,7 +115,6 @@ def predict_plant_disease(image_file):
     ) * 100
 
     # Top 3 predictions
-
     top_predictions = []
 
     for class_id in probabilities.top5[:3]:
@@ -140,7 +151,6 @@ def predict_plant_disease(image_file):
     "/predict-disease",
     methods=["POST"]
 )
-
 def predict_disease_api():
 
     try:
@@ -148,11 +158,8 @@ def predict_disease_api():
         if "image" not in request.files:
 
             return jsonify({
-
                 "success": False,
-
                 "error": "No image uploaded."
-
             }), 400
 
         image_file = request.files["image"]
@@ -160,26 +167,18 @@ def predict_disease_api():
         if image_file.filename == "":
 
             return jsonify({
-
                 "success": False,
-
                 "error": "Please select an image."
-
             }), 400
 
         if not allowed_file(image_file.filename):
 
             return jsonify({
-
                 "success": False,
-
                 "error": "Only JPG, JPEG and PNG allowed."
-
             }), 400
 
-        result = predict_plant_disease(
-            image_file
-        )
+        result = predict_plant_disease(image_file)
 
         return jsonify({
 
@@ -216,7 +215,6 @@ def predict_disease_api():
     "/disease-health",
     methods=["GET"]
 )
-
 def disease_health():
 
     return jsonify({
@@ -227,6 +225,8 @@ def disease_health():
 
         "model_loaded": model is not None,
 
-        "number_of_classes": len(model.names)
+        "number_of_classes": (
+            len(model.names) if model is not None else 0
+        )
 
     }), 200
