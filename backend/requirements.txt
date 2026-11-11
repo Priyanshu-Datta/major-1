@@ -1,9 +1,9 @@
 Flask
 flask-cors
 pandas
-gunicorn
-numpy==2.2.6
 scikit-learn==1.7.2
+gunicorn
+numpy==1.26.4
 joblib
 ultralytics==8.3.0
 Pillow
