@@ -47,7 +47,7 @@ function Navbar() {
           to="/page5"
           className={isActive("/page5") ? "active" : ""}
         >
-          Part 5
+          Treatment Guide
         </Link>
       </div>
 
