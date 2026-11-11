@@ -5,11 +5,11 @@ const FORECAST_API = "https://api.open-meteo.com/v1/forecast";
 const GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
 
 const DEFAULT_LOCATION = {
-  name: "Bardhaman",
-  admin1: "West Bengal",
+  name: "Bhubaneswar",
+  admin1: "Odisha",
   country: "India",
-  latitude: 23.2324,
-  longitude: 87.8615,
+  latitude: 20.2961,
+  longitude: 85.8245,
 };
 
 const WEATHER_CODES = {
